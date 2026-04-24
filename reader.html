@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumen · 阅读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/reader.css">
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="topbar reader-topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      论文库
+    </a>
+    <div class="divider-v"></div>
+    <div class="paper-title-mini" id="paperTitleMini">加载中…</div>
+  </div>
+  <div class="topbar-right">
+    <div class="model-badge" id="modelBadge" onclick="window.location='settings.html'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      <span id="modelBadgeText">未配置</span>
+    </div>
+    <button class="icon-btn" title="导出对话" onclick="exportChat()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="reader-layout">
+  <!-- Left: PDF / Paper content -->
+  <div class="pdf-panel" id="pdfPanel">
+    <div class="pdf-toolbar">
+      <div class="pdf-toolbar-left">
+        <button class="icon-btn active" id="tabContent" onclick="switchTab('content')">全文</button>
+        <button class="icon-btn" id="tabInfo" onclick="switchTab('info')">信息</button>
+      </div>
+      <div class="pdf-toolbar-right">
+        <button class="icon-btn" title="在新标签页打开原文" onclick="openOriginal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="pdf-content-wrap" id="tabContentView">
+      <div class="paper-doc" id="paperDoc">
+        <div class="doc-loading">
+          <div class="spinner"></div>
+          <span>正在加载论文…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdf-content-wrap hidden" id="tabInfoView">
+      <div class="info-card" id="infoCard">
+        <div class="info-loading">加载中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: AI Chat -->
+  <div class="chat-panel">
+    <div class="chat-topbar">
+      <div class="chat-model-info">
+        <div class="ai-orb"></div>
+        <div>
+          <div class="chat-model-name" id="chatModelName">AI 助手</div>
+          <div class="chat-model-sub">论文深度分析</div>
+        </div>
+      </div>
+      <button class="icon-btn danger" title="清空对话" onclick="clearChat()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-welcome" id="chatWelcome">
+        <div class="welcome-orb"></div>
+        <p>正在分析论文，请稍候…</p>
+      </div>
+    </div>
+
+    <div class="quick-prompts" id="quickPrompts">
+      <div class="quick-label">快捷提问</div>
+      <div class="quick-chips" id="quickChips"></div>
+    </div>
+
+    <div class="chat-input-wrap">
+      <div class="chat-input-box">
+        <textarea
+          id="chatInput"
+          class="chat-textarea"
+          placeholder="问这篇论文任何问题…"
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
+    </div>
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/reader.js"></script>
+</body>
+</html>

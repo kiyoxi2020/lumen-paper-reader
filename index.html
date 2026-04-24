@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumen · 论文助读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="topbar">
+  <div class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-text">Lumen</span>
+  </div>
+  <nav class="topnav">
+    <a href="index.html" class="nav-link active">论文库</a>
+    <a href="settings.html" class="nav-link">模型配置</a>
+  </nav>
+  <button class="btn-primary" onclick="openAddModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    添加论文
+  </button>
+</header>
+
+<main class="library-main">
+  <aside class="library-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">筛选</div>
+      <div class="filter-tags" id="filterTags">
+        <button class="ftag active" data-filter="all">全部</button>
+        <button class="ftag" data-filter="NLP">NLP</button>
+        <button class="ftag" data-filter="CV">CV</button>
+        <button class="ftag" data-filter="生成模型">生成模型</button>
+        <button class="ftag" data-filter="强化学习">强化学习</button>
+        <button class="ftag" data-filter="其他">其他</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">排序</div>
+      <select class="sort-select" id="sortSelect">
+        <option value="date-desc">最新添加</option>
+        <option value="date-asc">最早添加</option>
+        <option value="title">标题 A→Z</option>
+      </select>
+    </div>
+    <div class="sidebar-section stats-block">
+      <div class="stat-item">
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-label">论文总数</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="statAnalyzed">0</div>
+        <div class="stat-label">已分析</div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="library-grid-wrap">
+    <div class="search-bar-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="搜索论文标题、作者、关键词…">
+    </div>
+    <div class="paper-grid" id="paperGrid">
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2"/><rect x="9" y="2" width="6" height="4" rx="1"/></svg>
+        </div>
+        <p>暂无论文，点击右上角添加</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Add Paper Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>添加论文</h2>
+      <button class="modal-close" onclick="closeAddModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">论文标题 <span class="required">*</span></label>
+        <input type="text" class="field-input" id="newTitle" placeholder="例：Attention Is All You Need">
+      </div>
+      <div class="field-group">
+        <label class="field-label">论文链接（arXiv / DOI / URL）</label>
+        <input type="text" class="field-input" id="newUrl" placeholder="https://arxiv.org/abs/1706.03762">
+      </div>
+      <div class="field-group">
+        <label class="field-label">作者</label>
+        <input type="text" class="field-input" id="newAuthors" placeholder="Vaswani et al.">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">年份</label>
+          <input type="text" class="field-input" id="newYear" placeholder="2024">
+        </div>
+        <div class="field-group">
+          <label class="field-label">领域标签</label>
+          <select class="field-input" id="newTag">
+            <option value="NLP">NLP</option>
+            <option value="CV">CV</option>
+            <option value="生成模型">生成模型</option>
+            <option value="强化学习">强化学习</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">摘要（可粘贴原文 Abstract）</label>
+        <textarea class="field-input field-textarea" id="newAbstract" placeholder="粘贴论文摘要，AI 将基于此生成初步分析…" rows="4"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeAddModal()">取消</button>
+      <button class="btn-primary" onclick="submitAddPaper()">
+        <span id="addBtnText">添加并分析</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/index.js"></script>
+</body>
+</html>
