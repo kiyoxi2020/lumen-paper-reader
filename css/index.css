@@ -153,3 +153,36 @@
   display: flex; align-items: center; justify-content: center;
   color: var(--ink-5);
 }
+
+/* PDF Upload Zone (modal) */
+.pdf-upload-zone {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  border: 2px dashed var(--border-2);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--ink-4);
+  transition: var(--transition);
+}
+.pdf-upload-zone:hover,
+.pdf-upload-zone.drag-over {
+  border-color: var(--ink-3);
+  background: var(--paper-3);
+  color: var(--ink-2);
+}
+.pdf-upload-zone.has-file {
+  border-style: solid;
+  border-color: var(--teal);
+  background: var(--teal-pale);
+  color: var(--teal);
+}
+.pdf-upload-zone .upload-icon { flex-shrink: 0; }
+.pdf-upload-zone .upload-text { font-size: 13.5px; }
+
+/* Card PDF badge */
+.card-pdf-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--ink-4);
+  padding: 2px 6px; border-radius: 4px;
+  background: var(--paper-2);
+}

@@ -96,6 +96,14 @@
         <input type="text" class="field-input" id="newUrl" placeholder="https://arxiv.org/abs/1706.03762">
       </div>
       <div class="field-group">
+        <label class="field-label">PDF 文件</label>
+        <div class="pdf-upload-zone" id="pdfUploadZone" onclick="document.getElementById('newPdfFile').click()">
+          <svg class="upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+          <span class="upload-text" id="pdfUploadText">点击或拖拽上传 PDF</span>
+          <input type="file" id="newPdfFile" accept=".pdf" style="display:none" onchange="onPdfSelected(this)">
+        </div>
+      </div>
+      <div class="field-group">
         <label class="field-label">作者</label>
         <input type="text" class="field-input" id="newAuthors" placeholder="Vaswani et al.">
       </div>

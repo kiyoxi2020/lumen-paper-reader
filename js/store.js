@@ -1,3 +1,59 @@
+/* ===== LUMEN PDF STORE — IndexedDB layer for PDF blobs ===== */
+const PdfStore = (() => {
+  const DB_NAME = 'lumen_pdfs';
+  const STORE_NAME = 'pdfs';
+  let db = null;
+
+  function open() {
+    if (db) return Promise.resolve(db);
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore(STORE_NAME, { keyPath: 'paperId' });
+      };
+      req.onsuccess = () => { db = req.result; resolve(db); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function save(paperId, blob) {
+    const d = await open();
+    return new Promise((resolve, reject) => {
+      const tx = d.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put({ paperId, blob, size: blob.size, savedAt: new Date().toISOString() });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function get(paperId) {
+    const d = await open();
+    return new Promise((resolve, reject) => {
+      const tx = d.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(paperId);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function remove(paperId) {
+    const d = await open();
+    return new Promise((resolve, reject) => {
+      const tx = d.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).delete(paperId);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function has(paperId) {
+    const record = await get(paperId);
+    return !!record;
+  }
+
+  return { save, get, remove, has };
+})();
+
 /* ===== LUMEN STORE — localStorage data layer ===== */
 const Store = (() => {
   const PAPERS_KEY = 'lumen_papers';
@@ -39,6 +95,7 @@ const Store = (() => {
   function deletePaper(id) {
     const papers = getPapers().filter(p => p.id !== id);
     savePapers(papers);
+    PdfStore.remove(id);
   }
   function addMessage(paperId, role, text) {
     const papers = getPapers();

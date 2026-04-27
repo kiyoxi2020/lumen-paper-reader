@@ -3,6 +3,8 @@ let paperId = null;
 let paper = null;
 let isLoading = false;
 let abortController = null;
+let pdfBlobUrl = null;
+let hasPdf = false;
 
 const QUICK_PROMPTS = [
   '核心贡献是什么？', '方法论详解', '关键公式推导',
@@ -37,6 +39,9 @@ async function init() {
   // Load chat history
   renderMessages();
 
+  // Setup PDF
+  await loadPdf();
+
   // Auto-analyze if new paper
   if (!paper.analyzed && !paper.messages?.length) {
     await autoAnalyze();
@@ -63,8 +68,8 @@ function renderPaperDoc() {
     <div class="section-h">正文内容</div>
     <p class="placeholder-text">
       ${paper.url
-        ? `本论文已记录在库中。如需阅读完整 PDF，请点击右上角链接在新标签页打开。右侧 AI 已基于摘要和标题进行了初步分析，您可以直接开始提问。`
-        : `论文已添加至库中。右侧 AI 将基于您提供的信息进行分析，您可以在右侧对话框中详细描述论文内容，AI 会协助您深入理解。`
+        ? `本论文已记录在库中。如需阅读完整 PDF，请切换到「PDF」标签页或在右上角链接新标签页打开。右侧 AI 已基于摘要和标题进行了初步分析，您可以直接开始提问。`
+        : `论文已添加至库中。您可以在「PDF」标签页上传论文 PDF 直接阅读，或在右侧对话框中描述论文内容，AI 会协助您深入理解。`
       }
     </p>
     <p class="placeholder-text" style="margin-top:12px">
@@ -93,6 +98,15 @@ function renderInfoTab() {
       ${paper.url ? `<div class="info-row"><span class="info-key">原文</span><span class="info-val"><a href="${paper.url}" target="_blank" style="color:var(--accent)">${paper.url}</a></span></div>` : '<div class="info-row"><span class="info-key">—</span></div>'}
     </div>
     <div class="info-section">
+      <h3>PDF</h3>
+      <div style="padding:8px 0;display:flex;gap:8px;align-items:center">
+        ${hasPdf
+          ? `<span class="info-tag" style="background:var(--teal-pale);color:var(--teal)">已上传</span><button class="info-action-btn" onclick="removePdf()">删除 PDF</button>`
+          : `<span class="info-tag">未上传</span><button class="info-action-btn" onclick="switchTab('pdf')">上传 PDF</button>`
+        }
+      </div>
+    </div>
+    <div class="info-section">
       <h3>标签</h3>
       <div style="padding:8px 0"><span class="info-tag">${paper.tag || '其他'}</span></div>
     </div>
@@ -106,9 +120,92 @@ function infoRow(key, val) {
 function switchTab(tab) {
   document.getElementById('tabContentView').classList.toggle('hidden', tab !== 'content');
   document.getElementById('tabInfoView').classList.toggle('hidden', tab !== 'info');
+  document.getElementById('tabPdfView').classList.toggle('hidden', tab !== 'pdf');
   document.getElementById('tabContent').classList.toggle('active', tab === 'content');
+  document.getElementById('tabPdf').classList.toggle('active', tab === 'pdf');
   document.getElementById('tabInfo').classList.toggle('active', tab === 'info');
 }
+
+/* ---- PDF ---- */
+async function loadPdf() {
+  const record = await PdfStore.get(paperId);
+  if (record && record.blob) {
+    hasPdf = true;
+    pdfBlobUrl = URL.createObjectURL(record.blob);
+    document.getElementById('pdfEmbed').src = pdfBlobUrl;
+    document.getElementById('pdfEmbed').style.display = 'block';
+    document.getElementById('pdfUploadZoneReader').style.display = 'none';
+    // Re-render info tab now that PDF status is known
+    renderInfoTab();
+    // Auto-switch to PDF tab
+    switchTab('pdf');
+  } else {
+    hasPdf = false;
+    setupReaderPdfUpload();
+    renderInfoTab();
+  }
+}
+
+function setupReaderPdfUpload() {
+  const zone = document.getElementById('pdfUploadZoneReader');
+  const fileInput = document.getElementById('readerPdfFile');
+
+  zone.onclick = () => fileInput.click();
+
+  fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if (file) handleReaderPdfUpload(file);
+  };
+
+  zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+  zone.ondragleave = () => zone.classList.remove('drag-over');
+  zone.ondrop = (e) => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleReaderPdfUpload(file);
+  };
+}
+
+async function handleReaderPdfUpload(file) {
+  if (file.type !== 'application/pdf') {
+    showToast('请选择 PDF 文件', 'error');
+    return;
+  }
+  try {
+    await PdfStore.save(paperId, file);
+    hasPdf = true;
+    pdfBlobUrl = URL.createObjectURL(file);
+    document.getElementById('pdfEmbed').src = pdfBlobUrl;
+    document.getElementById('pdfEmbed').style.display = 'block';
+    document.getElementById('pdfUploadZoneReader').style.display = 'none';
+    renderInfoTab();
+    switchTab('pdf');
+    showToast('PDF 已上传', 'success');
+  } catch(e) {
+    console.error('PDF upload failed:', e);
+    showToast('PDF 上传失败', 'error');
+  }
+}
+
+async function removePdf() {
+  if (!confirm('确定删除此论文的 PDF 文件？')) return;
+  if (pdfBlobUrl) { URL.revokeObjectURL(pdfBlobUrl); pdfBlobUrl = null; }
+  document.getElementById('pdfEmbed').src = '';
+  document.getElementById('pdfEmbed').style.display = 'none';
+  document.getElementById('pdfUploadZoneReader').style.display = '';
+  hasPdf = false;
+  await PdfStore.remove(paperId);
+  setupReaderPdfUpload();
+  renderInfoTab();
+  switchTab('content');
+  showToast('PDF 已删除', '');
+}
+
+// Cleanup blob URLs on page unload
+window.addEventListener('beforeunload', () => {
+  if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+});
 
 function renderQuickPrompts() {
   const chips = document.getElementById('quickChips');

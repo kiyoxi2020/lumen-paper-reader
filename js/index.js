@@ -2,6 +2,7 @@
 let currentFilter = 'all';
 let currentSort = 'date-desc';
 let currentSearch = '';
+let selectedPdfFile = null;
 
 function init() {
   loadSeedData();
@@ -133,6 +134,16 @@ function renderGrid() {
         </span>
         ${msgCount > 0 ? `<span class="card-chat-count"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${msgCount}</span>` : ''}
       </div>`;
+    // Check PDF status async and add badge
+    PdfStore.has(p.id).then(hasPdf => {
+      if (hasPdf) {
+        const footer = card.querySelector('.card-footer');
+        const badge = document.createElement('span');
+        badge.className = 'card-pdf-badge';
+        badge.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF';
+        footer.appendChild(badge);
+      }
+    });
     card.addEventListener('click', (e) => {
       if (e.target.closest('.card-menu-btn')) return;
       openPaper(p.id);
@@ -161,11 +172,49 @@ function updateStats() {
 }
 
 /* ---- ADD MODAL ---- */
-function openAddModal() { document.getElementById('addModal').classList.add('show'); }
+function openAddModal() {
+  document.getElementById('addModal').classList.add('show');
+  setupPdfDropZone();
+}
 function closeAddModal() {
   document.getElementById('addModal').classList.remove('show');
   ['newTitle','newUrl','newAuthors','newYear','newAbstract'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('addBtnText').textContent = '添加并分析';
+  selectedPdfFile = null;
+  document.getElementById('newPdfFile').value = '';
+  document.getElementById('pdfUploadText').textContent = '点击或拖拽上传 PDF';
+  document.getElementById('pdfUploadZone').classList.remove('has-file');
+}
+
+function onPdfSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.type !== 'application/pdf') {
+    showToast('请选择 PDF 文件', 'error');
+    input.value = '';
+    return;
+  }
+  selectedPdfFile = file;
+  document.getElementById('pdfUploadText').textContent = file.name;
+  document.getElementById('pdfUploadZone').classList.add('has-file');
+}
+
+function setupPdfDropZone() {
+  const zone = document.getElementById('pdfUploadZone');
+  zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+  zone.ondragleave = () => zone.classList.remove('drag-over');
+  zone.ondrop = (e) => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      selectedPdfFile = file;
+      document.getElementById('pdfUploadText').textContent = file.name;
+      zone.classList.add('has-file');
+    } else {
+      showToast('请选择 PDF 文件', 'error');
+    }
+  };
 }
 
 async function submitAddPaper() {
@@ -180,6 +229,16 @@ async function submitAddPaper() {
     tag: document.getElementById('newTag').value,
     abstract: document.getElementById('newAbstract').value.trim()
   });
+
+  // Save PDF if selected
+  if (selectedPdfFile) {
+    try {
+      await PdfStore.save(paper.id, selectedPdfFile);
+    } catch(e) {
+      console.error('PDF save failed:', e);
+      showToast('PDF 保存失败，但论文已添加', 'error');
+    }
+  }
 
   closeAddModal();
   renderGrid();
