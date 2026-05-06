@@ -194,6 +194,11 @@ function onPdfSelected(input) {
     input.value = '';
     return;
   }
+  if (file.size > 100 * 1024 * 1024) {
+    showToast('PDF 文件过大，上限 100MB', 'error');
+    input.value = '';
+    return;
+  }
   selectedPdfFile = file;
   document.getElementById('pdfUploadText').textContent = file.name;
   document.getElementById('pdfUploadZone').classList.add('has-file');
@@ -207,13 +212,18 @@ function setupPdfDropZone() {
     e.preventDefault();
     zone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
-    if (file && file.type === 'application/pdf') {
-      selectedPdfFile = file;
-      document.getElementById('pdfUploadText').textContent = file.name;
-      zone.classList.add('has-file');
-    } else {
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
       showToast('请选择 PDF 文件', 'error');
+      return;
     }
+    if (file.size > 100 * 1024 * 1024) {
+      showToast('PDF 文件过大，上限 100MB', 'error');
+      return;
+    }
+    selectedPdfFile = file;
+    document.getElementById('pdfUploadText').textContent = file.name;
+    zone.classList.add('has-file');
   };
 }
 

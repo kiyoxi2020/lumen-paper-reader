@@ -2,9 +2,12 @@
 const PdfStore = (() => {
   const DB_NAME = 'lumen_pdfs';
   const STORE_NAME = 'pdfs';
+  const MAX_SIZE = 100 * 1024 * 1024; // 100MB limit
   let db = null;
+  let supported = typeof indexedDB !== 'undefined';
 
   function open() {
+    if (!supported) return Promise.reject(new Error('浏览器不支持 IndexedDB'));
     if (db) return Promise.resolve(db);
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, 1);
@@ -17,6 +20,7 @@ const PdfStore = (() => {
   }
 
   async function save(paperId, blob) {
+    if (blob.size > MAX_SIZE) throw new Error(`PDF 文件过大（${(blob.size / 1024 / 1024).toFixed(1)}MB），上限 100MB`);
     const d = await open();
     return new Promise((resolve, reject) => {
       const tx = d.transaction(STORE_NAME, 'readwrite');
@@ -27,28 +31,34 @@ const PdfStore = (() => {
   }
 
   async function get(paperId) {
-    const d = await open();
-    return new Promise((resolve, reject) => {
-      const tx = d.transaction(STORE_NAME, 'readonly');
-      const req = tx.objectStore(STORE_NAME).get(paperId);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => reject(req.error);
-    });
+    try {
+      const d = await open();
+      return new Promise((resolve, reject) => {
+        const tx = d.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(paperId);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch { return null; }
   }
 
   async function remove(paperId) {
-    const d = await open();
-    return new Promise((resolve, reject) => {
-      const tx = d.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).delete(paperId);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
+    try {
+      const d = await open();
+      return new Promise((resolve, reject) => {
+        const tx = d.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).delete(paperId);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch { /* ignore */ }
   }
 
   async function has(paperId) {
-    const record = await get(paperId);
-    return !!record;
+    try {
+      const record = await get(paperId);
+      return !!record;
+    } catch { return false; }
   }
 
   return { save, get, remove, has };

@@ -41,6 +41,7 @@ async function init() {
 
   // Setup PDF
   await loadPdf();
+  setupPanelDrop();
 
   // Auto-analyze if new paper
   if (!paper.analyzed && !paper.messages?.length) {
@@ -167,9 +168,28 @@ function setupReaderPdfUpload() {
   };
 }
 
+// Also allow drag-and-drop on the entire PDF panel when no PDF is loaded
+function setupPanelDrop() {
+  const panel = document.getElementById('pdfPanel');
+  panel.ondragover = (e) => {
+    if (hasPdf) return;
+    e.preventDefault();
+  };
+  panel.ondrop = (e) => {
+    if (hasPdf) return;
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleReaderPdfUpload(file);
+  };
+}
+
 async function handleReaderPdfUpload(file) {
   if (file.type !== 'application/pdf') {
     showToast('请选择 PDF 文件', 'error');
+    return;
+  }
+  if (file.size > 100 * 1024 * 1024) {
+    showToast('PDF 文件过大，上限 100MB', 'error');
     return;
   }
   try {
