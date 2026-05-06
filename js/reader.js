@@ -1,4 +1,9 @@
 /* ===== READER PAGE ===== */
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
 let paperId = null;
 let paper = null;
 let isLoading = false;
@@ -53,11 +58,11 @@ function renderPaperDoc() {
   const doc = document.getElementById('paperDoc');
   const urlLink = paper.url ? `<a href="${paper.url}" target="_blank">${paper.url}</a>` : '';
   doc.innerHTML = `
-    <h1>${paper.title}</h1>
+    <h1>${esc(paper.title)}</h1>
     <div class="paper-meta">
-      ${paper.authors ? `<strong>作者：</strong>${paper.authors}<br>` : ''}
-      ${paper.year ? `<strong>年份：</strong>${paper.year}<br>` : ''}
-      ${paper.tag ? `<strong>领域：</strong>${paper.tag}<br>` : ''}
+      ${paper.authors ? `<strong>作者：</strong>${esc(paper.authors)}<br>` : ''}
+      ${paper.year ? `<strong>年份：</strong>${esc(paper.year)}<br>` : ''}
+      ${paper.tag ? `<strong>领域：</strong>${esc(paper.tag)}<br>` : ''}
       ${urlLink ? `<strong>链接：</strong>${urlLink}` : ''}
     </div>
     ${paper.abstract ? `
@@ -87,22 +92,22 @@ function renderInfoTab() {
   infoCard.innerHTML = `
     <div class="info-section">
       <h3>论文信息</h3>
-      ${infoRow('标题', paper.title)}
-      ${infoRow('作者', paper.authors || '—')}
-      ${infoRow('年份', paper.year || '—')}
-      ${infoRow('领域', paper.tag || '—')}
+      ${infoRow('标题', esc(paper.title))}
+      ${infoRow('作者', esc(paper.authors || '—'))}
+      ${infoRow('年份', esc(paper.year || '—'))}
+      ${infoRow('领域', esc(paper.tag || '—'))}
       ${infoRow('状态', paper.analyzed ? '已 AI 分析' : '待分析')}
       ${infoRow('添加时间', new Date(paper.addedAt).toLocaleString('zh-CN'))}
     </div>
     <div class="info-section">
       <h3>链接</h3>
-      ${paper.url ? `<div class="info-row"><span class="info-key">原文</span><span class="info-val"><a href="${paper.url}" target="_blank" style="color:var(--accent)">${paper.url}</a></span></div>` : '<div class="info-row"><span class="info-key">—</span></div>'}
+      ${paper.url ? `<div class="info-row"><span class="info-key">原文</span><span class="info-val"><a href="${esc(paper.url)}" target="_blank" style="color:var(--accent)">${esc(paper.url)}</a></span></div>` : '<div class="info-row"><span class="info-key">—</span></div>'}
     </div>
     <div class="info-section">
       <h3>PDF</h3>
-      <div style="padding:8px 0;display:flex;gap:8px;align-items:center">
+      <div style="padding:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         ${hasPdf
-          ? `<span class="info-tag" style="background:var(--teal-pale);color:var(--teal)">已上传</span><button class="info-action-btn" onclick="removePdf()">删除 PDF</button>`
+          ? `<span class="info-tag" style="background:var(--teal-pale);color:var(--teal)">已上传</span><button class="info-action-btn" onclick="replacePdf()">替换</button><button class="info-action-btn danger" onclick="removePdf()">删除</button>`
           : `<span class="info-tag">未上传</span><button class="info-action-btn" onclick="switchTab('pdf')">上传 PDF</button>`
         }
       </div>
@@ -138,12 +143,27 @@ async function loadPdf() {
     document.getElementById('pdfUploadZoneReader').style.display = 'none';
     // Re-render info tab now that PDF status is known
     renderInfoTab();
+    // Update PDF tab badge
+    updatePdfTabBadge(true, record.size);
     // Auto-switch to PDF tab
     switchTab('pdf');
   } else {
     hasPdf = false;
     setupReaderPdfUpload();
     renderInfoTab();
+    updatePdfTabBadge(false);
+  }
+}
+
+function updatePdfTabBadge(show, size) {
+  const tab = document.getElementById('tabPdf');
+  if (show) {
+    const sizeStr = size > 1024 * 1024
+      ? (size / 1024 / 1024).toFixed(1) + 'MB'
+      : (size / 1024).toFixed(0) + 'KB';
+    tab.innerHTML = `PDF <span style="font-size:10px;color:var(--ink-4);font-weight:400;margin-left:2px">${sizeStr}</span>`;
+  } else {
+    tab.textContent = 'PDF';
   }
 }
 
@@ -200,12 +220,24 @@ async function handleReaderPdfUpload(file) {
     document.getElementById('pdfEmbed').style.display = 'block';
     document.getElementById('pdfUploadZoneReader').style.display = 'none';
     renderInfoTab();
+    updatePdfTabBadge(true, file.size);
     switchTab('pdf');
     showToast('PDF 已上传', 'success');
   } catch(e) {
     console.error('PDF upload failed:', e);
     showToast('PDF 上传失败', 'error');
   }
+}
+
+function replacePdf() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.pdf';
+  input.onchange = () => {
+    const file = input.files[0];
+    if (file) handleReaderPdfUpload(file);
+  };
+  input.click();
 }
 
 async function removePdf() {
@@ -218,6 +250,7 @@ async function removePdf() {
   await PdfStore.remove(paperId);
   setupReaderPdfUpload();
   renderInfoTab();
+  updatePdfTabBadge(false);
   switchTab('content');
   showToast('PDF 已删除', '');
 }

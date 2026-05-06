@@ -116,6 +116,7 @@ body { overflow: hidden; }
   transition: var(--transition);
 }
 .info-action-btn:hover { background: var(--paper-3); color: var(--ink); }
+.info-action-btn.danger:hover { background: #fde8e8; color: #c0281a; }
 
 /* Info panel */
 .info-card { max-width: 600px; margin: 0 auto; padding: 32px 40px; }

@@ -4,6 +4,12 @@ let currentSort = 'date-desc';
 let currentSearch = '';
 let selectedPdfFile = null;
 
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
 function init() {
   loadSeedData();
   renderGrid();
@@ -119,13 +125,13 @@ function renderGrid() {
     const msgCount = (p.messages || []).length;
     card.innerHTML = `
       <div class="card-header">
-        <span class="card-tag">${p.tag || '其他'}</span>
+        <span class="card-tag">${esc(p.tag || '其他')}</span>
         <button class="card-menu-btn" onclick="deletePaper(event,'${p.id}')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
         </button>
       </div>
-      <div class="card-title">${p.title}</div>
-      <div class="card-authors">${p.authors || '未知作者'}${p.year ? ' · ' + p.year : ''}</div>
+      <div class="card-title">${esc(p.title)}</div>
+      <div class="card-authors">${esc(p.authors || '未知作者')}${p.year ? ' · ' + esc(p.year) : ''}</div>
       <div class="card-footer">
         <span class="card-date">${date}</span>
         <span class="card-status">
