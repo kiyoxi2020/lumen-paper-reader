@@ -186,3 +186,10 @@
   padding: 2px 6px; border-radius: 4px;
   background: var(--paper-2);
 }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .library-sidebar { display: none; }
+  .paper-grid { grid-template-columns: 1fr; }
+  .library-grid-wrap { padding: 16px; }
+}

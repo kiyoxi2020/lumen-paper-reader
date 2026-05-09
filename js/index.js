@@ -14,6 +14,7 @@ function init() {
   loadSeedData();
   renderGrid();
   updateStats();
+  PdfStore.cleanup(); // clean orphaned PDFs on load
 
   // Filter tags
   document.querySelectorAll('.ftag').forEach(btn => {

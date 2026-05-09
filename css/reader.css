@@ -259,3 +259,14 @@ body { overflow: hidden; }
 .send-btn:hover { background: var(--ink-2); }
 .send-btn:disabled { background: var(--ink-5); cursor: not-allowed; }
 .input-hint { font-size: 11px; color: var(--ink-5); margin-top: 6px; text-align: right; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .reader-layout { flex-direction: column; }
+  .pdf-panel { min-height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .chat-panel { width: 100%; min-width: 0; min-height: 40vh; }
+  .paper-doc { padding: 24px 20px; }
+  .info-card { padding: 20px; }
+  .pdf-upload-inner { padding: 40px 20px; max-width: 280px; }
+  .pdf-upload-inner svg { width: 28px; height: 28px; }
+}

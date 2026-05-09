@@ -255,10 +255,12 @@ async function removePdf() {
   showToast('PDF 已删除', '');
 }
 
-// Cleanup blob URLs on page unload
-window.addEventListener('beforeunload', () => {
-  if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-});
+// Cleanup blob URLs on page unload or navigation
+function cleanupBlobUrl() {
+  if (pdfBlobUrl) { URL.revokeObjectURL(pdfBlobUrl); pdfBlobUrl = null; }
+}
+window.addEventListener('beforeunload', cleanupBlobUrl);
+document.querySelector('.back-btn')?.addEventListener('click', cleanupBlobUrl);
 
 function renderQuickPrompts() {
   const chips = document.getElementById('quickChips');

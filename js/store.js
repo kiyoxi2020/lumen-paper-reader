@@ -61,7 +61,29 @@ const PdfStore = (() => {
     } catch { return false; }
   }
 
-  return { save, get, remove, has };
+  async function cleanup() {
+    try {
+      const d = await open();
+      const tx = d.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const allKeys = await new Promise((resolve, reject) => {
+        const req = store.getAllKeys();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      const paperIds = new Set(Store.getPapers().map(p => p.id));
+      let cleaned = 0;
+      for (const key of allKeys) {
+        if (!paperIds.has(key)) {
+          await remove(key);
+          cleaned++;
+        }
+      }
+      return cleaned;
+    } catch { return 0; }
+  }
+
+  return { save, get, remove, has, cleanup };
 })();
 
 /* ===== LUMEN STORE — localStorage data layer ===== */
@@ -105,7 +127,7 @@ const Store = (() => {
   function deletePaper(id) {
     const papers = getPapers().filter(p => p.id !== id);
     savePapers(papers);
-    PdfStore.remove(id);
+    PdfStore.remove(id); // fire-and-forget is fine — IndexedDB cleanup is non-critical
   }
   function addMessage(paperId, role, text) {
     const papers = getPapers();
