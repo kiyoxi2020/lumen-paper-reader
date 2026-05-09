@@ -5,7 +5,8 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8765/index.html)",
-      "Bash(open http://localhost:8765/index.html)"
+      "Bash(open http://localhost:8765/index.html)",
+      "Bash(curl -s http://localhost:8765/index.html)"
     ]
   }
 }

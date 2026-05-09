@@ -126,7 +126,7 @@ const Store = (() => {
     provider: 'anthropic',
     apiKey: '',
     baseUrl: '',
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     maxTokens: 2000,
     temperature: 0.7,
     systemPrompt: '你是一位专业的学术论文分析助手。你的任务是帮助研究者深入理解论文内容。请用清晰简洁的中文回答，使用 Markdown 格式，适当使用标题、列表和代码块来组织内容。对于公式，请用文字描述。'
@@ -149,11 +149,11 @@ const Store = (() => {
       name: 'Anthropic',
       baseUrl: 'https://api.anthropic.com',
       models: [
-        { value: 'claude-opus-4-5', label: 'Claude Opus 4.5' },
-        { value: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5 (推荐)' },
-        { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 (快速)' },
+        { value: 'claude-opus-4-7', label: 'Claude Opus 4.7 (最强)' },
+        { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (推荐)' },
+        { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (快速)' },
+        { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
         { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-        { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
         { value: 'custom', label: '自定义模型' }
       ]
     },
@@ -318,9 +318,13 @@ async function callOpenAICompat(cfg, baseUrl, messages, onChunk, signal) {
 
 /* ===== MARKDOWN ===== */
 function renderMarkdown(text) {
-  // Very lightweight Markdown renderer
   let html = text
+    // Preserve blockquotes before escaping
+    .replace(/^> (.+)$/gm, '\x01BQ\x01$1\x01/BQ\x01')
+    // Escape HTML
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Restore blockquotes
+    .replace(/\x01BQ\x01/g, '<blockquote>').replace(/\x01\/BQ\x01/g, '</blockquote>')
     // Code blocks
     .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
     // Inline code
@@ -332,14 +336,11 @@ function renderMarkdown(text) {
     // Bold / italic
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Blockquote
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
     // Lists
     .replace(/^\- (.+)$/gm, '<li>$1</li>')
     .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
     // Line breaks
     .replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-  // Wrap loose li
   html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
   if (!html.startsWith('<')) html = '<p>' + html + '</p>';
   return html;
