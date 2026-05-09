@@ -56,7 +56,7 @@ async function init() {
 
 function renderPaperDoc() {
   const doc = document.getElementById('paperDoc');
-  const urlLink = paper.url ? `<a href="${paper.url}" target="_blank">${paper.url}</a>` : '';
+  const urlLink = (paper.url && /^https?:\/\//i.test(paper.url)) ? `<a href="${esc(paper.url)}" target="_blank">${esc(paper.url)}</a>` : '';
   doc.innerHTML = `
     <h1>${esc(paper.title)}</h1>
     <div class="paper-meta">
@@ -68,7 +68,7 @@ function renderPaperDoc() {
     ${paper.abstract ? `
       <div class="abstract-block">
         <strong>Abstract</strong>
-        <p>${paper.abstract}</p>
+        <p>${esc(paper.abstract)}</p>
       </div>
     ` : ''}
     <div class="section-h">正文内容</div>
@@ -479,7 +479,8 @@ function clearChat() {
 }
 
 function openOriginal() {
-  if (paper.url) window.open(paper.url, '_blank');
+  if (paper.url && /^https?:\/\//i.test(paper.url)) window.open(paper.url, '_blank');
+  else if (paper.url) showToast('链接格式不正确', 'error');
   else showToast('未设置论文链接', 'error');
 }
 
