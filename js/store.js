@@ -200,6 +200,18 @@ const Store = (() => {
         { value: 'custom', label: '自定义模型' }
       ]
     },
+    volc: {
+      name: '火山引擎',
+      baseUrl: 'https://ark.cn-beijing.volces.com/api/coding/v3',
+      models: [
+        { value: 'doubao-seed-2-0-pro-260215', label: '豆包 Seed 2.0 Pro (推荐)' },
+        { value: 'doubao-seed-2-0-lite-260428', label: '豆包 Seed 2.0 Lite (快速)' },
+        { value: 'doubao-seed-2-0-mini-260428', label: '豆包 Seed 2.0 Mini (轻量)' },
+        { value: 'deepseek-v3-2-251201', label: 'DeepSeek V3' },
+        { value: 'qwen3-32b-20250429', label: '通义千问3 32B' },
+        { value: 'custom', label: '自定义模型' }
+      ]
+    },
     custom: {
       name: '自定义',
       baseUrl: '',
