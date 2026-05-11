@@ -145,20 +145,33 @@ const Store = (() => {
 
   /* ---- CONFIG ---- */
   const DEFAULT_CONFIG = {
-    provider: 'anthropic',
-    apiKey: '',
-    baseUrl: '',
-    model: 'claude-sonnet-4-6',
+    provider: 'volc',
+    apiKey: '790364d6-772c-445d-ab32-eab563815dba',
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/coding/v3',
+    model: 'doubao-seed-2-0-pro-260215',
     maxTokens: 2000,
     temperature: 0.7,
+    _version: 2,
     systemPrompt: '你是一位专业的学术论文分析助手。你的任务是帮助研究者深入理解论文内容。请用清晰简洁的中文回答，使用 Markdown 格式，适当使用标题、列表和代码块来组织内容。对于公式，请用文字描述。'
   };
   function getConfig() {
-    try { return { ...DEFAULT_CONFIG, ...JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}') }; }
-    catch { return { ...DEFAULT_CONFIG }; }
+    try {
+      const saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
+      if (!saved._version || saved._version < DEFAULT_CONFIG._version) {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
+        return { ...DEFAULT_CONFIG };
+      }
+      return { ...DEFAULT_CONFIG, ...saved };
+    } catch {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
+      return { ...DEFAULT_CONFIG };
+    }
   }
   function saveConfig(cfg) {
     localStorage.setItem(CONFIG_KEY, JSON.stringify({ ...getConfig(), ...cfg }));
+  }
+  function resetConfig() {
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
   }
   function hasValidConfig() {
     const c = getConfig();
@@ -219,7 +232,7 @@ const Store = (() => {
     }
   };
 
-  return { getPapers, savePapers, addPaper, getPaper, updatePaper, deletePaper, addMessage, clearMessages, getConfig, saveConfig, hasValidConfig, PROVIDERS };
+  return { getPapers, savePapers, addPaper, getPaper, updatePaper, deletePaper, addMessage, clearMessages, getConfig, saveConfig, hasValidConfig, resetConfig, PROVIDERS };
 })();
 
 /* ===== TOAST ===== */
